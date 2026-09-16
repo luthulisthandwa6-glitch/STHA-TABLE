@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>{{ app_name }} | South African restaurants</title>
+</head>
+<body>
+    <main class="shell directory-page">
+        <nav class="navbar">
+            <a class="brand" href="{{ url_for('menu') }}"><span class="brand-mark">S</span> {{ app_name }}</a>
+            <span class="directory-label">South African restaurants</span>
+        </nav>
+
+        <section class="directory-hero">
+            <p class="eyebrow">Skip the queue</p>
+            <h1>Choose a restaurant.<br><span>Order from your table.</span></h1>
+            <p>Find your restaurant, choose your meal, and let the team know what you need. Call or text the cashier whenever you need help.</p>
+        </section>
+
+        <section class="restaurant-directory" aria-labelledby="restaurant-list-title">
+            <div class="menu-toolbar">
+                <h2 id="restaurant-list-title">Restaurants near you</h2>
+                <span class="status">{{ restaurants|length }} available</span>
+            </div>
+            <div class="restaurant-grid">
+                {% for restaurant in restaurants %}
+                    <a class="restaurant-card" href="{{ url_for('restaurant_menu', restaurant_slug=restaurant.slug) }}">
+                        <div class="restaurant-card-mark">{{ restaurant.name[0] }}</div>
+                        <div>
+                            <h3>{{ restaurant.name }}</h3>
+                            <p>{{ restaurant.tagline }}</p>
+                            <span class="restaurant-action">View menu &rarr;</span>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        </section>
+
+        <footer class="page-footer"><span>Order ahead. Sit back. Enjoy.</span><span>Cashier help is one tap away.</span></footer>
+    </main>
+</body>
+</html>

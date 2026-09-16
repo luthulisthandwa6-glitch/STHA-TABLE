@@ -4,16 +4,16 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <title>Table & Thyme | Menu</title>
+    <title>{{ restaurant.name }} | Menu</title>
 </head>
 <body>
     <main class="shell">
         <nav class="navbar">
-            <a class="brand" href="/"><span class="brand-mark">T</span> {{ restaurant.name }}</a>
+            <a class="brand" href="{{ url_for('restaurant_menu', restaurant_slug=restaurant_slug) }}"><span class="brand-mark">{{ restaurant.name[0] }}</span> {{ restaurant.name }}</a>
             <div class="nav-actions">
-                <a class="contact-link call-link" href="tel:{{ restaurant.waiter_phone }}">Call waiter</a>
-                <a class="contact-link text-link" href="sms:{{ restaurant.waiter_phone }}?body=Hello%2C%20I%20need%20help%20with%20my%20order">Text waiter</a>
-                <a class="nav-link" href="/waiter">Dashboard &rarr;</a>
+                <a class="contact-link call-link" href="tel:{{ restaurant.waiter_phone }}">Call cashier</a>
+                <a class="contact-link text-link" href="sms:{{ restaurant.waiter_phone }}?body=Hello%2C%20I%20need%20help%20with%20my%20order">Text cashier</a>
+                <a class="nav-link" href="{{ url_for('waiter', restaurant_slug=restaurant_slug) }}">Dashboard &rarr;</a>
             </div>
         </nav>
 
@@ -21,20 +21,21 @@
             <div>
                 <p class="eyebrow">{{ restaurant.tagline }}</p>
                 <h1>Made fresh.<br><span>Served happy.</span></h1>
-                <p class="hero-copy">Pull up a chair and explore today's feel-good favourites, made with generous portions and a little bit of joy.</p>
+                <p class="hero-copy">{{ restaurant.hero_copy }}</p>
             </div>
             <aside class="hero-note">
                 <strong>Today's note</strong>
-                <p>Our kitchen is cooking with extra love today. Ask your waiter about the chef's special.</p>
+                <p>{{ restaurant.note }}</p>
             </aside>
         </section>
 
-        <form action="/order" method="post">
+        <form action="{{ url_for('create_order') }}" method="post">
+            <input type="hidden" name="restaurant_slug" value="{{ restaurant_slug }}">
             {% if error %}<div class="form-alert">{{ error }}</div>{% endif %}
             <section class="service-panel">
                 <div class="service-heading"><div><p class="eyebrow">Where should we serve you?</p><h2>Order from anywhere</h2></div><span class="service-badge">No counter queues</span></div>
                 <div class="service-options">
-                    <label class="service-option"><input type="radio" name="service" value="table" checked><span><strong>At my table</strong><small>We will bring it to you</small></span></label>
+                    <label class="service-option"><input type="radio" name="service" value="table" checked><span><strong>At my table</strong><small>A waiter will serve you</small></span></label>
                     <label class="service-option"><input type="radio" name="service" value="home"><span><strong>At home</strong><small>Fresh delivery to your door</small></span></label>
                 </div>
                 <div class="order-details">
@@ -48,15 +49,15 @@
                 <h2>Our menu</h2>
                 <span class="status">Kitchen is open</span>
             </div>
-            {% for category in ['Main', 'Sides', 'Drinks'] %}
+            {% for category in restaurant.menu|map(attribute='cat')|unique %}
                 <section class="category">
                     <div class="category-heading"><span class="category-dot"></span><h3>{{ category }}</h3><span class="category-line"></span></div>
                     <div class="menu-grid">
-                        {% for item in menu if item.cat == category %}
+                        {% for item in restaurant.menu if item.cat == category %}
                             <article class="menu-card">
                                 <h3>{{ item.name }}</h3>
-                                <div class="price">R {{ '%.2f'|format(item.price) }} <small>per serving</small></div>
-                                <label class="quantity">Qty <input type="number" name="qty_{{ item.name }}" min="0" max="20" value="0"></label>
+                                <div class="price">{{ restaurant.currency }} {{ '%.2f'|format(item.price) }} <small>per serving</small></div>
+                                <label class="quantity">Qty <input type="number" name="qty_{{ item.id }}" min="0" max="20" value="0"></label>
                             </article>
                         {% endfor %}
                     </div>
