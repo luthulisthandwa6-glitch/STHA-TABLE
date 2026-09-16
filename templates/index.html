@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Table & Thyme | Menu</title>
+</head>
+<body>
+    <main class="shell">
+        <nav class="navbar">
+            <a class="brand" href="/"><span class="brand-mark">T</span> {{ restaurant.name }}</a>
+            <div class="nav-actions">
+                <a class="contact-link call-link" href="tel:{{ restaurant.waiter_phone }}">Call waiter</a>
+                <a class="contact-link text-link" href="sms:{{ restaurant.waiter_phone }}?body=Hello%2C%20I%20need%20help%20with%20my%20order">Text waiter</a>
+                <a class="nav-link" href="/waiter">Dashboard &rarr;</a>
+            </div>
+        </nav>
+
+        <section class="hero">
+            <div>
+                <p class="eyebrow">{{ restaurant.tagline }}</p>
+                <h1>Made fresh.<br><span>Served happy.</span></h1>
+                <p class="hero-copy">Pull up a chair and explore today's feel-good favourites, made with generous portions and a little bit of joy.</p>
+            </div>
+            <aside class="hero-note">
+                <strong>Today's note</strong>
+                <p>Our kitchen is cooking with extra love today. Ask your waiter about the chef's special.</p>
+            </aside>
+        </section>
+
+        <form action="/order" method="post">
+            {% if error %}<div class="form-alert">{{ error }}</div>{% endif %}
+            <section class="service-panel">
+                <div class="service-heading"><div><p class="eyebrow">Where should we serve you?</p><h2>Order from anywhere</h2></div><span class="service-badge">No counter queues</span></div>
+                <div class="service-options">
+                    <label class="service-option"><input type="radio" name="service" value="table" checked><span><strong>At my table</strong><small>We will bring it to you</small></span></label>
+                    <label class="service-option"><input type="radio" name="service" value="home"><span><strong>At home</strong><small>Fresh delivery to your door</small></span></label>
+                </div>
+                <div class="order-details">
+                    <label>Your name<input type="text" name="customer" placeholder="e.g. Sam" required></label>
+                    <label>Phone number<input type="tel" name="phone" placeholder="For delivery updates"></label>
+                    <label>Table number<input type="text" name="table" value="{{ table }}" placeholder="e.g. 12"></label>
+                    <label>Delivery address<input type="text" name="address" placeholder="Only needed for home orders"></label>
+                </div>
+            </section>
+            <div class="menu-toolbar">
+                <h2>Our menu</h2>
+                <span class="status">Kitchen is open</span>
+            </div>
+            {% for category in ['Main', 'Sides', 'Drinks'] %}
+                <section class="category">
+                    <div class="category-heading"><span class="category-dot"></span><h3>{{ category }}</h3><span class="category-line"></span></div>
+                    <div class="menu-grid">
+                        {% for item in menu if item.cat == category %}
+                            <article class="menu-card">
+                                <h3>{{ item.name }}</h3>
+                                <div class="price">R {{ '%.2f'|format(item.price) }} <small>per serving</small></div>
+                                <label class="quantity">Qty <input type="number" name="qty_{{ item.name }}" min="0" max="20" value="0"></label>
+                            </article>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endfor %}
+            <div class="order-bar">
+                <span>Choose your favourites, then send the order to our kitchen.</span>
+                <button class="button" type="submit">Send order &rarr;</button>
+            </div>
+        </form>
+
+        <footer class="page-footer"><span>Made for hungry people.</span><span>Ask us, we are happy to help.</span></footer>
+    </main>
+</body>
+</html>

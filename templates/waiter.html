@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Table & Thyme | Waiter</title>
+</head>
+<body>
+    <main class="center-page">
+        <section class="paper">
+            <a class="brand" href="/"><span class="brand-mark">T</span> Table &amp; Thyme</a>
+            <div class="dashboard-icon">+</div>
+            <h1>Waiter dashboard</h1>
+            {% if orders %}
+                <div class="order-list">
+                    {% for order in orders|reverse %}
+                        <article class="order-row">
+                            <div><strong>Order #{{ order['id'] }}</strong><span>{{ order['customer'] }} · {{ order['items']|length }} item types</span><small>{% if order['service'] == 'table' %}Serve table {{ order['table'] }}{% else %}Deliver to {{ order['address'] }}{% endif %}</small></div>
+                            <b>R {{ '%.2f'|format(order.total) }}</b>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p>No new orders yet. When guests place an order, it will appear here ready for the kitchen.</p>
+            {% endif %}
+            <a class="button" href="/">View menu &rarr;</a>
+        </section>
+    </main>
+</body>
+</html>
