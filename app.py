@@ -8,11 +8,11 @@ app = Flask(__name__)
 
 ORDERS = []
 RESTAURANTS = {
-    'table-and-thyme': {
-        'name': 'Table & Thyme',
-        'tagline': 'A taste of South Africa',
-        'hero_copy': "Explore generous South African favourites, from smoky braai flavours to comforting home-style sides.",
-        'note': "Ask your waiter about today's braai special and freshly made chakalaka.",
+    'roco-mamas': {
+        'name': 'Roco Mamas',
+        'tagline': 'Big burgers, bold flavours, and great vibes',
+        'hero_copy': "Explore your Roco Mamas favourites, from loaded burgers to cheesy sides and comforting extras.",
+        'note': "Ask your waiter about today's specials and freshly made sides.",
         'waiter_phone': '+27000000000',
         'currency': 'R',
         'menu': [
@@ -101,7 +101,7 @@ def restaurant_menu(restaurant_slug):
 
 @app.post('/order')
 def create_order():
-    restaurant_slug = request.form.get('restaurant_slug', 'table-and-thyme')
+    restaurant_slug = request.form.get('restaurant_slug', 'roco-mamas')
     restaurant = get_restaurant(restaurant_slug)
     items = []
     for item in restaurant['menu']:
@@ -153,7 +153,7 @@ def slip(order_id):
 
 @app.route('/waiter')
 @app.route('/waiter/<restaurant_slug>')
-def waiter(restaurant_slug='table-and-thyme'):
+def waiter(restaurant_slug='roco-mamas'):
     restaurant = get_restaurant(restaurant_slug)
     orders = [order for order in ORDERS if order['restaurant_slug'] == restaurant_slug]
     return render_template('waiter.html', orders=orders, restaurant=restaurant, restaurant_slug=restaurant_slug)
