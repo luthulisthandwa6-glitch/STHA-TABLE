@@ -2,7 +2,7 @@ from uuid import uuid4
 
 from flask import Flask, abort, redirect, render_template, request, url_for
 
-APP_NAME = 'STHA-TABLE'
+APP_NAME = 'STHA TABLE'
 
 app = Flask(__name__)
 

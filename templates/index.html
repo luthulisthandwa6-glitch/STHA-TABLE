@@ -9,7 +9,10 @@
 <body>
     <main class="shell">
         <nav class="navbar">
-            <a class="brand" href="{{ url_for('restaurant_menu', restaurant_slug=restaurant_slug) }}"><span class="brand-mark">{{ restaurant.name[0] }}</span> {{ restaurant.name }}</a>
+            <a class="brand" href="{{ url_for('restaurant_menu', restaurant_slug=restaurant_slug) }}">{{ restaurant.name }}</a>
+            <button class="mobile-menu-button" type="button" aria-label="Toggle menu" aria-expanded="false" data-menu-toggle>
+                <span></span><span></span><span></span>
+            </button>
             <div class="nav-actions">
                 <a class="contact-link call-link" href="tel:{{ restaurant.waiter_phone }}">Call cashier</a>
                 <a class="contact-link text-link" href="sms:{{ restaurant.waiter_phone }}?body=Hello%2C%20I%20need%20help%20with%20my%20order">Text cashier</a>
@@ -71,5 +74,16 @@
 
         <footer class="page-footer"><span>Made for hungry people.</span><span>Ask us, we are happy to help.</span></footer>
     </main>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const button = document.querySelector('[data-menu-toggle]');
+            const navActions = document.querySelector('.nav-actions');
+            if (!button || !navActions) return;
+            button.addEventListener('click', function () {
+                const isOpen = navActions.classList.toggle('is-open');
+                button.setAttribute('aria-expanded', String(isOpen));
+            });
+        });
+    </script>
 </body>
 </html>

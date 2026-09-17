@@ -9,7 +9,7 @@
 <body>
     <main class="center-page">
         <section class="paper">
-            <a class="brand" href="{{ url_for('restaurant_menu', restaurant_slug=restaurant_slug) }}"><span class="brand-mark">{{ restaurant.name[0] }}</span> {{ restaurant.name }}</a>
+            <a class="brand" href="{{ url_for('restaurant_menu', restaurant_slug=restaurant_slug) }}">{{ restaurant.name }}</a>
             <div class="dashboard-icon">&#10003;</div>
             <h1>Order received!</h1>
             <p>Your order is safely with our kitchen team. We will get started right away.</p>

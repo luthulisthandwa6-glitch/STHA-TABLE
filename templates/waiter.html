@@ -9,7 +9,7 @@
 <body>
     <main class="center-page">
         <section class="paper">
-            <a class="brand" href="{{ url_for('restaurant_menu', restaurant_slug=restaurant_slug) }}"><span class="brand-mark">{{ restaurant.name[0] }}</span> {{ restaurant.name }}</a>
+            <a class="brand" href="{{ url_for('restaurant_menu', restaurant_slug=restaurant_slug) }}">{{ restaurant.name }}</a>
             <div class="dashboard-icon">+</div>
             <h1>Waiter dashboard</h1>
             {% if orders %}

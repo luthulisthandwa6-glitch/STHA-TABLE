@@ -9,7 +9,10 @@
 <body>
     <main class="shell directory-page">
         <nav class="navbar">
-            <a class="brand" href="{{ url_for('menu') }}"><span class="brand-mark">S</span> {{ app_name }}</a>
+            <a class="brand" href="{{ url_for('menu') }}">{{ app_name }}</a>
+            <button class="mobile-menu-button" type="button" aria-label="Toggle menu" aria-expanded="false" data-menu-toggle>
+                <span></span><span></span><span></span>
+            </button>
             <span class="directory-label">South African restaurants</span>
         </nav>
 
@@ -40,5 +43,16 @@
 
         <footer class="page-footer"><span>Order ahead. Sit back. Enjoy.</span><span>Cashier help is one tap away.</span></footer>
     </main>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const button = document.querySelector('[data-menu-toggle]');
+            const navActions = document.querySelector('.nav-actions');
+            if (!button || !navActions) return;
+            button.addEventListener('click', function () {
+                const isOpen = navActions.classList.toggle('is-open');
+                button.setAttribute('aria-expanded', String(isOpen));
+            });
+        });
+    </script>
 </body>
 </html>
