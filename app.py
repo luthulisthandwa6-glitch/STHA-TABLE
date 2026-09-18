@@ -1,6 +1,8 @@
 from uuid import uuid4
+import json
+import time
 
-from flask import Flask, abort, redirect, render_template, request, url_for
+from flask import Flask, Response, abort, redirect, render_template, request, stream_with_context, url_for
 
 APP_NAME = 'STHA TABLE'
 
@@ -157,6 +159,36 @@ def waiter(restaurant_slug='roco-mamas'):
     restaurant = get_restaurant(restaurant_slug)
     orders = [order for order in ORDERS if order['restaurant_slug'] == restaurant_slug]
     return render_template('waiter.html', orders=orders, restaurant=restaurant, restaurant_slug=restaurant_slug)
+
+
+@app.get('/api/orders/<restaurant_slug>/stream')
+def order_stream(restaurant_slug):
+    get_restaurant(restaurant_slug)
+    last_event_id = request.headers.get('Last-Event-ID', '0')
+    try:
+        last_event_id = max(0, int(last_event_id))
+    except ValueError:
+        last_event_id = 0
+
+    def events():
+        nonlocal last_event_id
+        matching_orders = [order for order in ORDERS if order['restaurant_slug'] == restaurant_slug]
+        last_event_id = min(last_event_id, len(matching_orders))
+        yield f'event: snapshot\nid: {last_event_id}\ndata: {json.dumps(matching_orders)}\n\n'
+        while True:
+            matching_orders = [order for order in ORDERS if order['restaurant_slug'] == restaurant_slug]
+            if len(matching_orders) > last_event_id:
+                new_orders = matching_orders[last_event_id:]
+                last_event_id = len(matching_orders)
+                yield f'event: orders\nid: {last_event_id}\ndata: {json.dumps(new_orders)}\n\n'
+            else:
+                yield ': heartbeat\n\n'
+            time.sleep(0.25)
+
+    return Response(stream_with_context(events()), mimetype='text/event-stream', headers={
+        'Cache-Control': 'no-cache',
+        'X-Accel-Buffering': 'no',
+    })
 
 
 class Table:

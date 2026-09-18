@@ -7,25 +7,109 @@
     <title>{{ restaurant.name }} | Waiter</title>
 </head>
 <body>
-    <main class="center-page">
-        <section class="paper">
-            <a class="brand" href="{{ url_for('restaurant_menu', restaurant_slug=restaurant_slug) }}">{{ restaurant.name }}</a>
-            <div class="dashboard-icon">+</div>
-            <h1>Waiter dashboard</h1>
-            {% if orders %}
-                <div class="order-list">
-                    {% for order in orders|reverse %}
-                        <article class="order-row">
-                            <div><strong>Order #{{ order['id'] }}</strong><span>{{ order['customer'] }} · {{ order['items']|length }} item types</span><small>{% if order['service'] == 'table' %}Serve table {{ order['table'] }}{% else %}Deliver to {{ order['address'] }}{% endif %}</small></div>
-                            <b>{{ order.currency }} {{ '%.2f'|format(order.total) }}</b>
-                        </article>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <p>No new orders yet. When guests place an order, it will appear here ready for the kitchen.</p>
-            {% endif %}
-            <a class="button" href="{{ url_for('restaurant_menu', restaurant_slug=restaurant_slug) }}">View menu &rarr;</a>
+    <main class="dashboard-shell" data-stream-url="{{ url_for('order_stream', restaurant_slug=restaurant_slug) }}">
+        <header class="dashboard-header">
+            <div>
+                <a class="brand" href="{{ url_for('restaurant_menu', restaurant_slug=restaurant_slug) }}">{{ restaurant.name }}</a>
+                <p class="eyebrow">Front of house · Live orders</p>
+                <h1>Ready when they are.</h1>
+            </div>
+            <div class="alarm-controls">
+                <span class="connection-status" data-connection>Status: connecting</span>
+                <button class="alarm-button" type="button" data-alarm>Enable alarm</button>
+            </div>
+        </header>
+
+        <section class="dashboard-summary" aria-label="Order summary">
+            <div><span>Open orders</span><strong data-order-count>{{ orders|length }}</strong></div>
+            <div><span>Last update</span><strong data-last-update>Waiting</strong></div>
+            <div><span>Sound</span><strong data-sound-status>Locked</strong></div>
+        </section>
+
+        <section class="live-orders" aria-live="polite">
+            <div class="orders-heading"><div><p class="eyebrow">Incoming now</p><h2>Live order queue</h2></div><span class="live-dot">Listening</span></div>
+            <div class="order-list" data-order-list>
+                {% for order in orders|reverse %}
+                    <article class="order-row" data-order-id="{{ order.id }}">
+                        <div><strong>Order #{{ order.id }}</strong><span>{{ order.customer }} · {{ order.items|length }} item types</span><small>{% if order.service == 'table' %}Serve table {{ order.table }}{% else %}Deliver to {{ order.address }}{% endif %}</small></div>
+                        <b>{{ order.currency }} {{ '%.2f'|format(order.total) }}</b>
+                    </article>
+                {% else %}
+                    <p class="empty-state" data-empty>No new orders yet. This screen is listening.</p>
+                {% endfor %}
+            </div>
         </section>
     </main>
+    <div class="alarm-flash" data-alarm-flash>New order received</div>
+    <script>
+        (function () {
+            const streamUrl = document.querySelector('[data-stream-url]').dataset.streamUrl;
+            const orderList = document.querySelector('[data-order-list]');
+            const count = document.querySelector('[data-order-count]');
+            const lastUpdate = document.querySelector('[data-last-update]');
+            const connection = document.querySelector('[data-connection]');
+            const alarmButton = document.querySelector('[data-alarm]');
+            const soundStatus = document.querySelector('[data-sound-status]');
+            const flash = document.querySelector('[data-alarm-flash]');
+            let audioContext;
+
+            function formatMoney(order) {
+                return `${order.currency} ${Number(order.total).toFixed(2)}`;
+            }
+
+            function addOrder(order, announce) {
+                if (document.querySelector(`[data-order-id="${order.id}"]`)) return;
+                const empty = document.querySelector('[data-empty]');
+                if (empty) empty.remove();
+                const row = document.createElement('article');
+                const destination = order.service === 'table' ? `Serve table ${order.table}` : `Deliver to ${order.address}`;
+                row.className = 'order-row new-order';
+                row.dataset.orderId = order.id;
+                row.innerHTML = `<div><strong>Order #${order.id}</strong><span>${order.customer} · ${order.items.length} item types</span><small>${destination}</small></div><b>${formatMoney(order)}</b>`;
+                orderList.prepend(row);
+                if (announce) triggerAlarm();
+            }
+
+            function triggerAlarm() {
+                flash.classList.remove('is-visible');
+                void flash.offsetWidth;
+                flash.classList.add('is-visible');
+                if (!audioContext) return;
+                const oscillator = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                oscillator.type = 'square';
+                oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+                oscillator.frequency.setValueAtTime(660, audioContext.currentTime + 0.16);
+                gain.gain.setValueAtTime(0.0001, audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.35, audioContext.currentTime + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.42);
+                oscillator.connect(gain).connect(audioContext.destination);
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.45);
+            }
+
+            alarmButton.addEventListener('click', function () {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                audioContext.resume();
+                soundStatus.textContent = 'Armed';
+                alarmButton.textContent = 'Alarm armed';
+                alarmButton.classList.add('is-armed');
+                triggerAlarm();
+            });
+
+            const source = new EventSource(streamUrl);
+            source.addEventListener('open', function () { connection.textContent = 'Status: live'; connection.classList.add('is-live'); });
+            source.addEventListener('error', function () { connection.textContent = 'Status: reconnecting'; connection.classList.remove('is-live'); });
+            source.addEventListener('snapshot', function (event) {
+                JSON.parse(event.data).forEach(function (order) { addOrder(order, false); });
+                count.textContent = document.querySelectorAll('[data-order-id]').length;
+            });
+            source.addEventListener('orders', function (event) {
+                JSON.parse(event.data).forEach(function (order) { addOrder(order, true); });
+                count.textContent = document.querySelectorAll('[data-order-id]').length;
+                lastUpdate.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            });
+        }());
+    </script>
 </body>
 </html>
