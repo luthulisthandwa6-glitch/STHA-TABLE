@@ -9,6 +9,8 @@ APP_NAME = 'STHA TABLE'
 app = Flask(__name__)
 
 ORDERS = []
+EVENTS = []
+NEXT_EVENT_ID = 0
 RESTAURANTS = {
     'roco-mamas': {
         'name': 'Roco Mamas',
@@ -87,6 +89,12 @@ def get_restaurant(slug):
     return restaurant
 
 
+def publish_event(event_type, payload):
+    global NEXT_EVENT_ID
+    NEXT_EVENT_ID += 1
+    EVENTS.append({'id': NEXT_EVENT_ID, 'type': event_type, 'payload': payload})
+
+
 @app.route('/')
 def menu():
     restaurants = [
@@ -141,6 +149,7 @@ def create_order():
         'address': address,
     }
     ORDERS.append(order)
+    publish_event('order', order)
     return redirect(url_for('slip', order_id=order['id']))
 
 
@@ -151,6 +160,24 @@ def slip(order_id):
         abort(404)
     restaurant = get_restaurant(order['restaurant_slug'])
     return render_template('order-slip.html', order_id=order_id, order=order, restaurant=restaurant, restaurant_slug=order['restaurant_slug'])
+
+
+@app.post('/request-bill')
+def request_bill():
+    restaurant_slug = request.form.get('restaurant_slug', 'roco-mamas')
+    restaurant = get_restaurant(restaurant_slug)
+    order_id = request.form.get('order_id', '').strip()
+    order = next((item for item in ORDERS if item['id'] == order_id and item['restaurant_slug'] == restaurant_slug), None)
+    bill_request = {
+        'id': uuid4().hex[:6].upper(),
+        'restaurant_slug': restaurant_slug,
+        'restaurant_name': restaurant['name'],
+        'order_id': order_id or 'Walk-in',
+        'customer': order['customer'] if order else request.form.get('customer', '').strip() or 'Guest',
+        'table': order['table'] if order else request.form.get('table', '').strip() or 'Not specified',
+    }
+    publish_event('bill_request', bill_request)
+    return redirect(url_for('slip', order_id=order_id)) if order else redirect(url_for('restaurant_menu', restaurant_slug=restaurant_slug))
 
 
 @app.route('/waiter')
@@ -173,14 +200,15 @@ def order_stream(restaurant_slug):
     def events():
         nonlocal last_event_id
         matching_orders = [order for order in ORDERS if order['restaurant_slug'] == restaurant_slug]
-        last_event_id = min(last_event_id, len(matching_orders))
-        yield f'event: snapshot\nid: {last_event_id}\ndata: {json.dumps(matching_orders)}\n\n'
+        latest_event_id = EVENTS[-1]['id'] if EVENTS else 0
+        last_event_id = min(last_event_id, latest_event_id)
+        yield f'event: snapshot\nid: {latest_event_id}\ndata: {json.dumps(matching_orders)}\n\n'
         while True:
-            matching_orders = [order for order in ORDERS if order['restaurant_slug'] == restaurant_slug]
-            if len(matching_orders) > last_event_id:
-                new_orders = matching_orders[last_event_id:]
-                last_event_id = len(matching_orders)
-                yield f'event: orders\nid: {last_event_id}\ndata: {json.dumps(new_orders)}\n\n'
+            new_events = [event for event in EVENTS if event['id'] > last_event_id and event['payload']['restaurant_slug'] == restaurant_slug]
+            if new_events:
+                for event in new_events:
+                    yield f"event: {event['type']}\nid: {event['id']}\ndata: {json.dumps(event['payload'])}\n\n"
+                    last_event_id = event['id']
             else:
                 yield ': heartbeat\n\n'
             time.sleep(0.25)

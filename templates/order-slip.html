@@ -25,11 +25,11 @@
             {% endif %}
             <br>
             <a class="button" href="{{ url_for('restaurant_menu', restaurant_slug=restaurant_slug) }}">Order something else &rarr;</a>
-            <div class="contact-actions">
-                <span>Need help?</span>
-                <a href="tel:{{ restaurant.waiter_phone }}">Call waiter</a>
-                <a href="sms:{{ restaurant.waiter_phone }}">Text waiter</a>
-            </div>
+            <form class="contact-actions" action="{{ url_for('request_bill') }}" method="post">
+                <input type="hidden" name="restaurant_slug" value="{{ restaurant_slug }}">
+                <input type="hidden" name="order_id" value="{{ order_id }}">
+                <button class="bill-button" type="submit">Request Bill</button>
+            </form>
         </section>
     </main>
 </body>

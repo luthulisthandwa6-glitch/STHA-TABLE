@@ -88,6 +88,15 @@
                 oscillator.stop(audioContext.currentTime + 0.45);
             }
 
+            function showBillRequest(request) {
+                const row = document.createElement('article');
+                row.className = 'bill-request new-order';
+                row.innerHTML = `<div><strong>Bill requested</strong><span>${request.customer} · ${request.order_id}</span><small>Table ${request.table}</small></div><b>ATTEND</b>`;
+                orderList.prepend(row);
+                flash.textContent = 'Bill requested';
+                triggerAlarm();
+            }
+
             alarmButton.addEventListener('click', function () {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 audioContext.resume();
@@ -107,6 +116,10 @@
             source.addEventListener('orders', function (event) {
                 JSON.parse(event.data).forEach(function (order) { addOrder(order, true); });
                 count.textContent = document.querySelectorAll('[data-order-id]').length;
+                lastUpdate.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            });
+            source.addEventListener('bill_request', function (event) {
+                showBillRequest(JSON.parse(event.data));
                 lastUpdate.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             });
         }());

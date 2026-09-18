@@ -157,7 +157,9 @@ a { color: inherit; text-decoration: none; }
 .button { display: inline-flex; align-items: center; justify-content: center; padding: 13px 18px; border-radius: 12px; background: var(--coral); color: white; font-weight: 700; box-shadow: 0 8px 16px rgba(232, 91, 64, .22); }
 .button:hover { background: var(--coral-dark); }
 .contact-actions { display: flex; align-items: center; gap: 12px; margin-top: 28px; color: var(--muted); font-size: .82rem; }
-.contact-actions a { color: var(--coral-dark); font-weight: 700; }
+.bill-button, .bill-link { border: 0; padding: 11px 14px; border-radius: 10px; background: var(--yellow); color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; }
+.bill-button:hover, .bill-link:hover { background: var(--coral); color: white; }
+.nav-actions form { margin: 0; }
 .dashboard-icon { display: grid; width: 64px; height: 64px; margin-bottom: 24px; place-items: center; border-radius: 20px; background: var(--mint); font-size: 1.8rem; }
 .order-list { display: grid; gap: 10px; margin: 24px 0; }
 .order-row { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 15px; border: 1px solid var(--line); border-radius: 14px; background: #fffaf2; }
@@ -192,6 +194,10 @@ a { color: inherit; text-decoration: none; }
 .live-orders .order-list { min-height: 120px; }
 .live-orders .order-row { background: var(--cream); }
 .order-row.new-order { animation: new-order .75s ease both; border-color: var(--coral); box-shadow: 0 0 0 3px rgba(255, 117, 87, .13); }
+.bill-request { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 15px; border: 2px solid var(--coral); border-radius: 14px; background: #ffe0d7; }
+.bill-request div { display: grid; gap: 4px; }
+.bill-request span { color: var(--muted); font-size: .78rem; }
+.bill-request small { color: var(--coral-dark); font-size: .76rem; }
 .empty-state { color: var(--muted); }
 .alarm-flash { position: fixed; top: 22px; left: 50%; z-index: 5; padding: 16px 22px; border-radius: 12px; background: var(--coral); color: white; font-family: 'Space Grotesk', sans-serif; font-weight: 700; opacity: 0; pointer-events: none; transform: translate(-50%, -18px); }
 .alarm-flash.is-visible { animation: alarm-flash 2.4s ease both; }
