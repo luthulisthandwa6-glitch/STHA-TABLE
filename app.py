@@ -85,8 +85,20 @@ RESTAURANTS.update({
     ]),
     'galitos-marshalltown-howard-house': chain("Galito's Marshalltown Howard House", '', []),
     'mimmos-braamfontein': chain('Mimmos Braamfontein', '', []),
-    'the-smokehouse-and-grill': chain('The Smokehouse and Grill', '', []),
-    'lacasa-spit-shisanyama': chain('LaCasa Spit & Shisanyama', '', []),
+    'the-smokehouse-and-grill': chain('The Smokehouse and Grill', 'Slow-smoked favourites and bold barbecue flavours', [
+        {'id': 'brisket-mac-cheese', 'name': '(New) Brisket Mac & Cheese', 'price': 140, 'cat': 'Mains'},
+        {'id': 'smoked-beef-brisket-bun', 'name': 'Smoked Beef Brisket Bun', 'price': 149, 'cat': 'Mains'},
+        {'id': 'smoked-pulled-pork-bun', 'name': 'Smoked Pulled Pork Bun', 'price': 135, 'cat': 'Mains'},
+        {'id': 'smoked-wings-half-portion', 'name': 'Smoked Wings (Half Portion)', 'price': 120, 'cat': 'Mains'},
+        {'id': 'smoked-wings-full-portion', 'name': 'Smoked Wings (Full Portion)', 'price': 200, 'cat': 'Mains'},
+        {'id': 'loaded-smoked-potato', 'name': 'Loaded Smoked Potato', 'price': 95, 'cat': 'Mains'},
+        {'id': 'spitfire-bombs', 'name': 'Spitfire Bombs', 'price': 70, 'cat': 'Mains'},
+        {'id': 'smoked-pork-ribs-half', 'name': 'Smoked Pork Ribs (1/2kg)', 'price': 230, 'cat': 'Mains'},
+        {'id': 'smoked-beef-rib-single', 'name': 'Smoked Beef Rib (Single Rib)', 'price': 120, 'cat': 'Mains'},
+        {'id': 'smoked-beef-ribs-half', 'name': 'Smoked Beef Ribs (1/2kg)', 'price': 310, 'cat': 'Mains'},
+        {'id': 'chicken-mac-cheese', 'name': '(New) Chicken Mac & Cheese', 'price': 110, 'cat': 'Mains'},
+        {'id': 'smoked-beef-rib-bun', 'name': 'Smoked Beef Rib Bun', 'price': 149, 'cat': 'Mains'},
+    ]),
 })
 
 
