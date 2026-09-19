@@ -83,6 +83,11 @@ RESTAURANTS.update({
         {'id': 'wimpy-burger', 'name': 'Wimpy Burger', 'price': 89, 'cat': 'Mains'},
         {'id': 'milkshake', 'name': 'Milkshake', 'price': 42, 'cat': 'Drinks'},
     ]),
+    'galitos-marshalltown-howard-house': chain("Galito's Marshalltown Howard House", '', []),
+    'ruchi-indian-restaurant': chain('Ruchi Indian Restaurant', '', []),
+    'mimmos-braamfontein': chain('Mimmos Braamfontein', '', []),
+    'the-smokehouse-and-grill': chain('The Smokehouse and Grill', '', []),
+    'lacasa-spit-shisanyama': chain('LaCasa Spit & Shisanyama', '', []),
 })
 
 
@@ -230,7 +235,7 @@ def api_request_bill():
 def request_bill():
     bill_request, _, order = create_bill_request(request.form)
     order_id = bill_request['order_id'] if order else ''
-    return redirect(url_for('slip', order_id=order_id)) if order else redirect(url_for('restaurant_menu', restaurant_slug=restaurant_slug))
+    return redirect(url_for('slip', order_id=order_id)) if order else redirect(url_for('restaurant_menu', restaurant_slug=bill_request['restaurant_slug']))
 
 
 @app.route('/waiter')

@@ -14,7 +14,7 @@
                 <span></span><span></span><span></span>
             </button>
             <div class="nav-actions">
-                <form action="{{ url_for('request_bill') }}" method="post">
+                <form action="{{ url_for('request_bill') }}" method="post" data-bill-form data-bill-endpoint="{{ url_for('api_request_bill') }}">
                     <input type="hidden" name="restaurant_slug" value="{{ restaurant_slug }}">
                     <input type="hidden" name="table" value="{{ table }}">
                     <button class="contact-link bill-link" type="submit">Request Bill</button>
@@ -77,6 +77,7 @@
 
         <footer class="page-footer"><span>Made for hungry people.</span><span>Ask us, we are happy to help.</span></footer>
     </main>
+    <script src="{{ url_for('static', filename='bill-request.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const button = document.querySelector('[data-menu-toggle]');

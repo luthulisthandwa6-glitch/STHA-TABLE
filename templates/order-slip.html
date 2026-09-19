@@ -25,12 +25,13 @@
             {% endif %}
             <br>
             <a class="button" href="{{ url_for('restaurant_menu', restaurant_slug=restaurant_slug) }}">Order something else &rarr;</a>
-            <form class="contact-actions" action="{{ url_for('request_bill') }}" method="post">
+            <form class="contact-actions" action="{{ url_for('request_bill') }}" method="post" data-bill-form data-bill-endpoint="{{ url_for('api_request_bill') }}">
                 <input type="hidden" name="restaurant_slug" value="{{ restaurant_slug }}">
                 <input type="hidden" name="order_id" value="{{ order_id }}">
                 <button class="bill-button" type="submit">Request Bill</button>
             </form>
         </section>
     </main>
+    <script src="{{ url_for('static', filename='bill-request.js') }}"></script>
 </body>
 </html>
