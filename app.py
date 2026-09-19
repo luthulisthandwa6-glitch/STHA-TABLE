@@ -3,6 +3,9 @@ import json
 import logging
 import os
 import time
+from urllib.error import HTTPError, URLError
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
 
 from flask import Flask, Response, abort, redirect, render_template, request, stream_with_context, url_for
 from twilio.rest import Client
@@ -275,7 +278,35 @@ def slip(order_id):
     return render_template('order-slip.html', order_id=order_id, order=order, restaurant=restaurant, restaurant_slug=order['restaurant_slug'])
 
 
+def send_telegram_notification(bill_request, restaurant):
+    bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
+    chat_id = os.getenv('TELEGRAM_CHAT_ID')
+    if not bot_token or not chat_id:
+        return 'not_configured'
+
+    message = (
+        f"Bill requested at {restaurant['name']} - "
+        f"Table {bill_request['table']}, {bill_request['customer']}"
+    )
+    payload = urlencode({'chat_id': chat_id, 'text': message}).encode()
+    endpoint = f'https://api.telegram.org/bot{bot_token}/sendMessage'
+    try:
+        with urlopen(Request(endpoint, data=payload, method='POST'), timeout=10) as response:
+            result = json.loads(response.read().decode())
+        if not result.get('ok'):
+            logger.error('Telegram bill notification failed: %s', result)
+            return 'failed'
+    except (HTTPError, URLError, TimeoutError, ValueError):
+        logger.exception('Telegram bill notification failed')
+        return 'failed'
+    return 'sent'
+
+
 def send_bill_notification(bill_request, restaurant):
+    telegram_status = send_telegram_notification(bill_request, restaurant)
+    if telegram_status != 'not_configured':
+        return telegram_status
+
     twilio_config = {
         'account_sid': os.getenv('TWILIO_ACCOUNT_SID'),
         'auth_token': os.getenv('TWILIO_AUTH_TOKEN'),
