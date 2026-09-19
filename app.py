@@ -84,7 +84,6 @@ RESTAURANTS.update({
         {'id': 'milkshake', 'name': 'Milkshake', 'price': 42, 'cat': 'Drinks'},
     ]),
     'galitos-marshalltown-howard-house': chain("Galito's Marshalltown Howard House", '', []),
-    'ruchi-indian-restaurant': chain('Ruchi Indian Restaurant', '', []),
     'mimmos-braamfontein': chain('Mimmos Braamfontein', '', []),
     'the-smokehouse-and-grill': chain('The Smokehouse and Grill', '', []),
     'lacasa-spit-shisanyama': chain('LaCasa Spit & Shisanyama', '', []),
