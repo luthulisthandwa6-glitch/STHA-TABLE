@@ -1,12 +1,16 @@
 from uuid import uuid4
 import json
+import logging
+import os
 import time
 
 from flask import Flask, Response, abort, redirect, render_template, request, stream_with_context, url_for
+from twilio.rest import Client
 
 APP_NAME = 'STHA TABLE'
 
 app = Flask(__name__)
+logger = logging.getLogger(__name__)
 
 ORDERS = []
 EVENTS = []
@@ -162,21 +166,70 @@ def slip(order_id):
     return render_template('order-slip.html', order_id=order_id, order=order, restaurant=restaurant, restaurant_slug=order['restaurant_slug'])
 
 
-@app.post('/request-bill')
-def request_bill():
-    restaurant_slug = request.form.get('restaurant_slug', 'roco-mamas')
+def send_bill_notification(bill_request, restaurant):
+    twilio_config = {
+        'account_sid': os.getenv('TWILIO_ACCOUNT_SID'),
+        'auth_token': os.getenv('TWILIO_AUTH_TOKEN'),
+        'from_phone': os.getenv('TWILIO_FROM_PHONE'),
+        'to_phone': os.getenv('TWILIO_TO_PHONE') or restaurant['waiter_phone'],
+    }
+    if not all(twilio_config.values()):
+        return 'not_configured'
+
+    message = (
+        f"Bill requested at {restaurant['name']} - "
+        f"Table {bill_request['table']}, {bill_request['customer']}"
+    )
+    try:
+        Client(twilio_config['account_sid'], twilio_config['auth_token']).messages.create(
+            body=message,
+            from_=twilio_config['from_phone'],
+            to=twilio_config['to_phone'],
+        )
+    except Exception:
+        logger.exception('Twilio bill notification failed')
+        return 'failed'
+    return 'sent'
+
+
+def create_bill_request(payload):
+    restaurant_slug = str(payload.get('restaurant_slug', 'roco-mamas')).strip()
     restaurant = get_restaurant(restaurant_slug)
-    order_id = request.form.get('order_id', '').strip()
+    order_id = str(payload.get('order_id', '')).strip()[:32]
     order = next((item for item in ORDERS if item['id'] == order_id and item['restaurant_slug'] == restaurant_slug), None)
     bill_request = {
         'id': uuid4().hex[:6].upper(),
         'restaurant_slug': restaurant_slug,
         'restaurant_name': restaurant['name'],
         'order_id': order_id or 'Walk-in',
-        'customer': order['customer'] if order else request.form.get('customer', '').strip() or 'Guest',
-        'table': order['table'] if order else request.form.get('table', '').strip() or 'Not specified',
+        'customer': order['customer'] if order else str(payload.get('customer', '')).strip()[:80] or 'Guest',
+        'table': order['table'] if order else str(payload.get('table', '')).strip()[:32] or 'Not specified',
     }
     publish_event('bill_request', bill_request)
+    notification = send_bill_notification(bill_request, restaurant)
+    return bill_request, notification, order
+
+
+@app.post('/api/request-bill')
+def api_request_bill():
+    payload = request.get_json(silent=True) if request.is_json else request.form.to_dict()
+    if not isinstance(payload, dict):
+        return {'ok': False, 'error': 'Invalid request.'}, 400
+    try:
+        bill_request, notification, _ = create_bill_request(payload)
+    except (TypeError, ValueError):
+        return {'ok': False, 'error': 'Invalid bill request.'}, 400
+    return {
+        'ok': True,
+        'bill_request_id': bill_request['id'],
+        'notification': notification,
+    }, 202
+
+
+@app.post('/request-bill')
+def request_bill():
+    bill_request, _, order = create_bill_request(request.form)
+    order_id = bill_request['order_id'] if order else ''
     return redirect(url_for('slip', order_id=order_id)) if order else redirect(url_for('restaurant_menu', restaurant_slug=restaurant_slug))
 
 
