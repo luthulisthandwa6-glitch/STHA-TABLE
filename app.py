@@ -284,10 +284,7 @@ def send_telegram_notification(bill_request, restaurant):
     if not bot_token or not chat_id:
         return 'not_configured'
 
-    message = (
-        f"Bill requested at {restaurant['name']} - "
-        f"Table {bill_request['table']}, {bill_request['customer']}"
-    )
+    message = format_bill_notification(bill_request, restaurant)
     payload = urlencode({'chat_id': chat_id, 'text': message}).encode()
     endpoint = f'https://api.telegram.org/bot{bot_token}/sendMessage'
     try:
@@ -316,10 +313,7 @@ def send_bill_notification(bill_request, restaurant):
     if not all(twilio_config.values()):
         return 'not_configured'
 
-    message = (
-        f"Bill requested at {restaurant['name']} - "
-        f"Table {bill_request['table']}, {bill_request['customer']}"
-    )
+    message = format_bill_notification(bill_request, restaurant)
     try:
         Client(twilio_config['account_sid'], twilio_config['auth_token']).messages.create(
             body=message,
@@ -332,11 +326,23 @@ def send_bill_notification(bill_request, restaurant):
     return 'sent'
 
 
+def format_bill_notification(bill_request, restaurant):
+    if bill_request['service'] == 'home':
+        location = f"Home delivery - Deliver to: {bill_request['address']}"
+    else:
+        location = f"Table {bill_request['table']}"
+    return (
+        f"Bill requested at {restaurant['name']} - "
+        f"{location}, {bill_request['customer']}"
+    )
+
+
 def create_bill_request(payload):
     restaurant_slug = str(payload.get('restaurant_slug', 'roco-mamas')).strip()
     restaurant = get_restaurant(restaurant_slug)
     order_id = str(payload.get('order_id', '')).strip()[:32]
     order = next((item for item in ORDERS if item['id'] == order_id and item['restaurant_slug'] == restaurant_slug), None)
+    service = order['service'] if order else str(payload.get('service', 'table')).strip()
     bill_request = {
         'id': uuid4().hex[:6].upper(),
         'restaurant_slug': restaurant_slug,
@@ -344,6 +350,8 @@ def create_bill_request(payload):
         'order_id': order_id or 'Walk-in',
         'customer': order['customer'] if order else str(payload.get('customer', '')).strip()[:80] or 'Guest',
         'table': order['table'] if order else str(payload.get('table', '')).strip()[:32] or 'Not specified',
+        'service': service if service in {'table', 'home'} else 'table',
+        'address': order['address'] if order else str(payload.get('address', '')).strip()[:160] or 'Not specified',
     }
     publish_event('bill_request', bill_request)
     notification = send_bill_notification(bill_request, restaurant)
